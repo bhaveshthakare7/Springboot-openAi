@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>AI Prompt UI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            font-family: "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #7b2ff7, #f107a3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            width: 90%;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 24px;
+            color: #fff;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            border-radius: 12px;
+            border: none;
+            padding: 12px;
+            font-size: 16px;
+            outline: none;
+            resize: none;
+        }
+
+        button {
+            margin-top: 12px;
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            background: #ffffff;
+            color: #7b2ff7;
+            transition: transform 0.2s ease;
+        }
+
+        button:hover {
+            transform: scale(1.03);
+        }
+
+        .response-box {
+            margin-top: 20px;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 12px;
+            min-height: 80px;
+            white-space: pre-wrap;
+        }
+
+        .loading {
+            opacity: 0.7;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>AI Prompt</h1>
+
+    <textarea id="prompt" placeholder="Type your prompt here..."></textarea>
+
+    <button onclick="sendPrompt()">Ask</button>
+
+    <div id="response" class="response-box"></div>
+</div>
+
+<script>
+    async function sendPrompt() {
+        const promptText = document.getElementById("prompt").value.trim();
+        const responseBox = document.getElementById("response");
+
+        if (!promptText) {
+            responseBox.textContent = "⚠️ Please enter a prompt.";
+            return;
+        }
+
+        responseBox.textContent = "Thinking...";
+        responseBox.classList.add("loading");
+
+        try {
+            const res = await fetch("http://localhost:8081/call", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    prompt: promptText
+                })
+            });
+
+            const data = await res.json();
+            responseBox.classList.remove("loading");
+            typeWriterEffect(data.response || "No response received");
+
+        } catch (err) {
+            responseBox.classList.remove("loading");
+            responseBox.textContent = "❌ Error connecting to API";
+        }
+    }
+
+    function typeWriterEffect(text) {
+        const responseBox = document.getElementById("response");
+        responseBox.textContent = "";
+        let index = 0;
+
+        const interval = setInterval(() => {
+            if (index < text.length) {
+                responseBox.textContent += text.charAt(index);
+                index++;
+            } else {
+                clearInterval(interval);
+            }
+        }, 20); // typing speed
+    }
+</script>
+
+</body>
+</html>
